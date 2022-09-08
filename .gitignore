@@ -50,3 +50,18 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# LaTeX temp. files
+*.aux
+*.bcf
+*.log
+*.pyg
+*.run.xml
+*.gz
+
+# IDE
+.idea
+.vscode
+
+# WSL
+*Zone.*
