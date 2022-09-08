@@ -58,6 +58,8 @@ dkms.conf
 *.pyg
 *.run.xml
 *.gz
+out/
+auxil/
 
 # IDE
 .idea

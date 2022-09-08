@@ -7,30 +7,6 @@
 
 \include{preamble}
 
-\lstdefinestyle{asm}{
-    language={[x86masm]Assembler},
-    backgroundcolor=\color{white},
-    basicstyle=\footnotesize\ttfamily,
-    keywordstyle=\color{blue},
-    stringstyle=\color{red},
-    commentstyle=\color{gray},
-    numbers=left,
-    numberstyle=\tiny,
-    stepnumber=1,
-    numbersep=5pt,
-    frame=single,
-    tabsize=4,
-    captionpos=b,
-    breaklines=true
-}
-
-\lstset{basicstyle=\fontsize{10}{10}\selectfont,breaklines=true,inputencoding=utf8x,extendedchars=\true}
-
-\newcommand{\specchapter}[1]{\chapter*{#1}\addcontentsline{toc}{chapter}{#1}}
-\newcommand{\specsection}[1]{\section*{#1}\addcontentsline{toc}{section}{#1}}
-\newcommand{\specsubsection}[1]{\subsection*{#1}\addcontentsline{toc}{subsection}{#1}}
-\newcommand{\RNumb}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
-\newcommand{\jj}{\righthyphenmin=20 \justifying}
 
 \begin{document}
 
@@ -46,7 +22,8 @@
     {Рязанова~Н.~Ю.} % ФИО преподавателя
 \clearpage
 
-%\stepcounter{chapter}
+\tableofcontents
+
 \chapter{Исходный дизассемблированный код}\label{ch:source}
 \section{Прерывание 8h}\label{sec:Dis_int}
 \begin{lstlisting}[style={asm},label={lst:INT8H}]
@@ -98,11 +75,17 @@
     020A:07A8  B0 20				mov	al,20h			; ' '
     020A:07AA  E6 20				out	20h,al			; port 20h, 8259-1 int command
                                            ;  al = 20h, end of interrupt
+										;  al = 20h, end of interrupt
+    020A:07AC  5A					pop	dx
+    020A:07AD  58					pop	ax
+    020A:07AE  1F					pop	ds
+    020A:07AF  07					pop	es
+    020A:07B0  E9 FE99				jmp	$-164h
 
 \end{lstlisting}
 \clearpage
 
-\section{SUB\_6}\label{subsec:sub_6}
+\section{SUB\_6}\label{sec:sub_6}
 \begin{lstlisting}[style={asm},label={lst:SUB_6}]
                         sub_6		proc	near
     020A:07B9  1E					push	ds
@@ -217,7 +200,7 @@
 {Схема С} % Подпись рисунка
 \clearpage
 
-\section{Схема прерывания sub\_6}\label{sec:sub}
+\section{Схема подпрограммы sub\_6}\label{sec:sub}
 \includeimage
 {diagram_sub} % Имя файла без расширения (файл должен быть расположен в директории inc/img/)
 {f} % Обтекание (без обтекания)
