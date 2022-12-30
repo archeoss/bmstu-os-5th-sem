@@ -12,7 +12,8 @@
 
 int main(void) {
     setbuf(stdout, NULL);
-
+    char *addr1, *addr2, *addr3;
+    char *letter_ptr;
     key_t shmkey = ftok(SHMKEYPATH, SHMKEYID); 
     if (-1 == shmkey) {
         perror("Failed to create shared memory!");
@@ -32,16 +33,22 @@ int main(void) {
         exit(1);
     }
 
-    char *shared_addr = shmat(fd, 0, 0);
-    if ((void *)-1 == shared_addr) {
+    char *addr = shmat(fd, 0, 0);
+    if ((void *)-1 == addr) {
         perror("Failed to shmat!");
         exit(1);
     }
+    addr1 = addr + sizeof(char*);
+    addr2 = addr1 + sizeof(char*);
+    addr3 = addr2 + sizeof(char);
 
-    char *shared_addr1 = shared_addr + 1;
-    char *shared_addr2 = shared_addr1 + 1;
-    *shared_addr2 = 'a';
-    char *alphabet_ptr = shared_addr2;
+    char **prod_ptr = (char **)addr;
+    char **cons_ptr = (char **)addr1;
+    letter_ptr = addr2;
+
+    *letter_ptr = 'a';
+    *prod_ptr = addr3;
+    *cons_ptr = addr3;
 
     int sid = semget(semkey, sems_amount, IPC_CREAT | perms);
     if (-1 == sid) {
@@ -75,12 +82,12 @@ int main(void) {
             exit(1);
         case 0:
             // producer_run(*((char **)producer_ptr), sid, i, alphabet_ptr);
-            producer_run(fd, sid, i, alphabet_ptr);
+            producer_run(fd, sid, i, letter_ptr);
             
             return 0;
         }
     }
-    producer_run(fd, sid, producers_amount - 1, alphabet_ptr);
+    producer_run(fd, sid, producers_amount - 1, letter_ptr);
     
     for (size_t i = 0; i < consumers_amount + producers_amount; i++) {
         int status;
@@ -92,7 +99,7 @@ int main(void) {
             fprintf(stderr, "Child process %d terminated abnormally\n", child_pid);
     }
     
-    if (-1 == shmdt(shared_addr))
+    if (-1 == shmdt(addr))
     {
         perror("shmdt error");
         exit(1);

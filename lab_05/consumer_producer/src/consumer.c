@@ -5,15 +5,16 @@ struct sembuf cons_lock[] = {
     { bin_sem, -1, 0 } 
 };
 
-struct sembuf cons_release[] = { 
-    { buf_empty, 1, 0 }, 
-    { bin_sem, 1, 0 } 
+struct sembuf cons_release[] = {  
+    { bin_sem, 1, 0 },
+    { buf_empty, 1, 0 }
 };
 
 int consumer_run(int fd, const int sid, const int consid) {
     char* addr = shmat(fd, NULL, 0);
     srand(time(NULL) + consid);
 
+    char **cons_ptr = (char**)(addr + sizeof(char*));
     for (int i = 0; i < iter_cnt; i++) 
     {
         int sleep_time = rand() % 4 + 1;
@@ -23,12 +24,9 @@ int consumer_run(int fd, const int sid, const int consid) {
             exit(1);
         }
 
-        char *consumer_ptr = (char*)(addr);
-        char sym = (*consumer_ptr)++;
-
         fprintf(stdout, "\t\t\t\t\t\t");
-        fprintf(stdout, "Consumer %d: %c, sleep=%d\n", consid + 1, sym, sleep_time);
-
+        fprintf(stdout, "Consumer %d: %c, sleep=%d\n", consid + 1, *(*cons_ptr - 1), sleep_time);
+        (*cons_ptr)++;
         if (-1 == semop(sid, cons_release, 2)) {
             perror("Producer release error\n");
             exit(1);
