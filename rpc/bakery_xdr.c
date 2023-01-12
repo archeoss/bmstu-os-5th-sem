@@ -6,13 +6,54 @@
 #include "bakery.h"
 
 bool_t
-xdr_bakery_t (XDR *xdrs, bakery_t *objp)
+xdr_BAKERY (XDR *xdrs, BAKERY *objp)
 {
 	register int32_t *buf;
+
+
+	if (xdrs->x_op == XDR_ENCODE) {
+		buf = XDR_INLINE (xdrs, 4 * BYTES_PER_XDR_UNIT);
+		if (buf == NULL) {
+			 if (!xdr_int (xdrs, &objp->op))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->num))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->pid))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->result))
+				 return FALSE;
+		} else {
+			IXDR_PUT_LONG(buf, objp->op);
+			IXDR_PUT_LONG(buf, objp->num);
+			IXDR_PUT_LONG(buf, objp->pid);
+			IXDR_PUT_LONG(buf, objp->result);
+		}
+		return TRUE;
+	} else if (xdrs->x_op == XDR_DECODE) {
+		buf = XDR_INLINE (xdrs, 4 * BYTES_PER_XDR_UNIT);
+		if (buf == NULL) {
+			 if (!xdr_int (xdrs, &objp->op))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->num))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->pid))
+				 return FALSE;
+			 if (!xdr_int (xdrs, &objp->result))
+				 return FALSE;
+		} else {
+			objp->op = IXDR_GET_LONG(buf);
+			objp->num = IXDR_GET_LONG(buf);
+			objp->pid = IXDR_GET_LONG(buf);
+			objp->result = IXDR_GET_LONG(buf);
+		}
+	 return TRUE;
+	}
 
 	 if (!xdr_int (xdrs, &objp->op))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->num))
+		 return FALSE;
+	 if (!xdr_int (xdrs, &objp->pid))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->result))
 		 return FALSE;

@@ -3,60 +3,72 @@
  * These are only templates and you can use them
  * as a guideline for developing your own functions.
  */
-
-#include "bakery.h"
 #include <stdio.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include "constants.h"
-
+#include "bakery.h"
 
 void
 bakery_prog_1(char *host)
 {
 	CLIENT *clnt;
-	struct bakery_t  *result_1;
-	struct bakery_t  bakery_proc_1_arg;
+	struct BAKERY *response;
+	struct BAKERY bakery_proc_1_arg;
+	
+	clnt = clnt_create(host, BAKERY_PROG, BAKERY_VER, "udp");
 
-	clnt = clnt_create (host, BAKERY_PROG, BAKERY_VER, "udp");
-	if (clnt == NULL) {
-		clnt_pcreateerror (host);
-		exit (1);
+	if (clnt == NULL) 
+	{
+		clnt_pcreateerror(host);
+		exit(1);
 	}
+
+	srand(time(NULL));
+	int interval = rand() % 4 + 1;
+	sleep(interval);
 
 	bakery_proc_1_arg.op = get_number;
-	result_1 = bakery_proc_1(&bakery_proc_1_arg, clnt);
-	if (result_1 == (struct bakery_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	response = bakery_proc_1(&bakery_proc_1_arg, clnt);
+
+	printf("\nClient pid = %d queue %d \n", getpid(), response->num);
+	
+	if (response == (struct BAKERY *) NULL) 
+	{
+		clnt_perror(clnt, "bakery_proc_1 failed");
 	}
-	printf("Client number=%d\n", result_1->num);
 
-	srand(time(NULL) + getpid());
-	int sleep_interval = rand() % 4 + 1;
-	sleep(sleep_interval);
+	sleep(interval);
+	
+	bakery_proc_1_arg.op = get_symbol; 
+	bakery_proc_1_arg.num = response->op;
+	bakery_proc_1_arg.pid = getpid();
+	response = bakery_proc_1(&bakery_proc_1_arg, clnt);
 
-	bakery_proc_1_arg.op = get_symbol;
-	bakery_proc_1_arg.num = result_1->op;
-	result_1 = bakery_proc_1(&bakery_proc_1_arg, clnt);
-	if (result_1 == (struct bakery_t *) NULL) {
-		clnt_perror (clnt, "call failed");
+	if (response == (struct BAKERY *) NULL) 
+	{
+		clnt_perror(clnt, "bakery_proc_1 failed");
 	}
-	printf("Symbol get %c (sleep = %d)\n\n", result_1->result, sleep_interval);
 
-	clnt_destroy (clnt);
+	printf("%d Symbol get %c (sleep = %d)\n\\n", response->pid, response->result, interval);
+	clnt_destroy(clnt);
 }
 
 int
 main (int argc, char *argv[])
 {
+	setbuf(stdin, NULL);
 	char *host;
 
-	if (argc < 2) {
-		printf ("usage: %s server_host\n", argv[0]);
-		exit (1);
+	if (argc < 2) 
+	{
+		printf("usage: %s server_host\n", argv[0]);
+		exit(1);
 	}
+
 	host = argv[1];
-	bakery_prog_1 (host);
-exit (0);
+	printf("\n");
+	bakery_prog_1(host);
+	exit(0);
 }

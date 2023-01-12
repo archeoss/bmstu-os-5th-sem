@@ -4,82 +4,96 @@
  * as a guideline for developing your own functions.
  */
 
-#include "bakery.h"
+#include <stdio.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <unistd.h>
-#include "constants.h"
+#include "bakery.h"
 
-struct ticket_t
+
+typedef struct target
 {
-	int num_queue;
+	int num; // очередь
 	char res;
-	int ind;
-};
-typedef struct ticket_t ticket_t;
+	int id;  
+} target_t;
 
 int choosing[max_client] = { 0 };
-int num[max_client] = { 0 };
+int number[max_client] = { 0 };
 char sym = 'a';
-int num_clnt = 0;
+int num = 0;
 
-void* get_ticket(void *arg)
+void *
+get_targ(void *arg)
 {
-	ticket_t *ticket = (ticket_t *)arg;
-	int i = num_clnt++;
-	ticket->ind = i;
-
+	target_t *targ = arg;
+	int i = num++;
+	targ->id = i;
 	choosing[i] = 1;
 	int max = 0;
+
 	for (int j = 0; j < max_client; j++)
 	{
-		if (num[j] > max)
+		if (number[j] > max)
 		{
-			max = num[j];
+			max = number[j];
 		}
 	}
-	num[i] = max + 1;
-	ticket->num_queue = num[i];
+
+	number[i] = max + 1;
+	targ->num = number[i];
 	choosing[i] = 0;
-	// return 0;
 }
 
-void* get_symbol_bakery(void *arg)
+void *
+bakery(void *arg)
 {
-	ticket_t *ticket = arg;
-	int i = ticket->ind;
+	target_t *targ = arg;
+	int i = targ->id;
 
 	for (int j = 0; j < max_client; j++) 
 	{
 		while (choosing[j]){};
-		while ((num[j] > 0) && (num[j] < num[i] || 
-		(num[j] == num[i] && j < i))){};
+		while ((number[j] > 0) && (number[j] < number[i] || 
+		(number[j] == number[i] && j < i))){};
 	}
+	
+	targ->res = sym++;
+	number[i] = 0;
 
-	ticket->res = sym++;
-	num[i] = 0;
-	// return 0;
+	return 0;
 }
 
-struct bakery_t *
-bakery_proc_1_svc(struct bakery_t *argp, struct svc_req *rqstp)
+struct BAKERY *
+bakery_proc_1_svc(struct BAKERY *argp, struct svc_req *rqstp)
 {
-	static struct bakery_t  result;
+	static struct BAKERY  result;
 	pthread_t thread;
-	ticket_t ticket;
+	target_t tres;
+	switch (argp->op)
+	{
+		case get_number:
+		{
+			pthread_create(&thread, NULL, get_targ, &tres);
+			pthread_join(thread, NULL);
+			result.pid = argp->pid;
+			result.num = tres.num;
+			result.op = tres.id;
+			break;
+		}
+		case get_symbol:	
+		{
+			tres.id = argp->num;
+			pthread_create(&thread, NULL, bakery, &tres);
+			pthread_join(thread, NULL);
+			result.pid = argp->pid;
+			result.result = tres.res;
+			result.op = tres.id;
+			break;
+		}
+		default:
+			break;
 
-	if (argp->op == get_number)
-	{
-		pthread_create(&thread, NULL, get_ticket, &ticket);
-		pthread_join(thread, NULL);
-		result.num = ticket.num_queue;
-		result.op = ticket.ind;
-	}
-	else if (argp->op == get_symbol)
-	{
-		ticket.ind = argp->num;
-		pthread_create(&thread, NULL, get_symbol_bakery, &ticket);
-		pthread_join(thread, NULL);
-		result.result = ticket.res;
 	}
 
 	return &result;
