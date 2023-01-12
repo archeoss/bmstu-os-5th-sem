@@ -24,15 +24,15 @@ bakery_prog_1(char *host)
 		clnt_pcreateerror(host);
 		exit(1);
 	}
-
-	srand(time(NULL));
+	pid_t pid = getpid();
+	srand(time(NULL) + pid * 2 % 3);
 	int interval = rand() % 4 + 1;
 	sleep(interval);
 
 	bakery_proc_1_arg.op = get_number;
 	response = bakery_proc_1(&bakery_proc_1_arg, clnt);
 
-	printf("\nClient pid = %d queue %d \n", getpid(), response->num);
+	printf("PID = %d queue %d\n", getpid(), response->num);
 	
 	if (response == (struct BAKERY *) NULL) 
 	{
@@ -43,7 +43,7 @@ bakery_prog_1(char *host)
 	
 	bakery_proc_1_arg.op = get_symbol; 
 	bakery_proc_1_arg.num = response->op;
-	bakery_proc_1_arg.pid = getpid();
+	bakery_proc_1_arg.pid = pid;
 	response = bakery_proc_1(&bakery_proc_1_arg, clnt);
 
 	if (response == (struct BAKERY *) NULL) 
@@ -51,7 +51,7 @@ bakery_prog_1(char *host)
 		clnt_perror(clnt, "bakery_proc_1 failed");
 	}
 
-	printf("%d Symbol get %c (sleep = %d)\n\\n", response->pid, response->result, interval);
+	printf("PID=%d, Symbol get %c (sleep = %d)\n\n", response->pid, response->result, interval);
 	clnt_destroy(clnt);
 }
 
