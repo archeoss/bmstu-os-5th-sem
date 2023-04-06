@@ -9,16 +9,19 @@ LIST = 1 2 3 4 5
 BIN_FOLDER = bin/
 targets_listen = $(addprefix $(BIN_FOLDER)client_listen, $(LIST))
 
-all: listen_only
+# all: listen_only
 
-listen_only: $(targets_listen) $(BIN_FOLDER)server_listen
+server_to_client: $(targets_listen) $(BIN_FOLDER)server_to
 	rm -f /tmp/demo_socket.sock
 	cd $(BIN_FOLDER)
-	./$(BIN_FOLDER)server_listen & st ./$(BIN_FOLDER)client_listen1 & st ./$(BIN_FOLDER)client_listen2 & st ./$(BIN_FOLDER)client_listen3 & st ./$(BIN_FOLDER)client_listen4 & st ./client_listen5
+	./$(BIN_FOLDER)server_to & st ./$(BIN_FOLDER)client_listen1 & st ./$(BIN_FOLDER)client_listen2 & st ./$(BIN_FOLDER)client_listen3 & st ./$(BIN_FOLDER)client_listen4 & st ./client_listen5
 client_listen%: client.c
 	gcc -o $@ client.c
 $(BIN_FOLDER)server_listen: 
 	gcc -o $@ server.c
+
+$(BIN_FOLDER)server_to: 
+	gcc -o $@ server_par.c
 
 clean:
 	rm -rf $(BIN_FOLDER)*

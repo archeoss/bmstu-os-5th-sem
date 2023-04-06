@@ -4,8 +4,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
-
 #define SOCKET_NAME "/tmp/demo_socket.sock"
 #define BUFFER_SIZE 1024
 
@@ -26,11 +26,10 @@ int main() {
 
   // отправляем сообщение на сервер
   char buffer[BUFFER_SIZE];
-  for (int i = 0; i < 10; i++) {
     int sleep_time = rand() % 4 + 1;
     sleep(sleep_time);
 
-    snprintf(buffer, BUFFER_SIZE, "message %d from client %d", i, getpid());
+    snprintf(buffer, BUFFER_SIZE, "message from client %d", getpid());
     int len = strlen(buffer);
     if (sendto(client_fd, buffer, len, 0, (struct sockaddr *)&client_addr,
                sizeof(client_addr)) == -1) {
